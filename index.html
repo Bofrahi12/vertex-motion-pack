@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="google" content="notranslate">
+<title>VERTEX — Motion Pack · 6 sections animées au scroll</title>
+<link rel="icon" href="data:,">
+<style>
+  :root{
+    --bg:#eef0f2; --ink:#101216; --red:#f43a1d; --blue:#2456e6; --sky:#57b6f0;
+    --green:#17b978; --pink:#f2549a; --orange:#ff8a1e; --violet:#7a4fe0; --yellow:#ffc61a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{overflow-x:clip;background:var(--bg);color:var(--ink);
+    font-family:"Helvetica Neue",Arial,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--ink);color:#fff}
+
+  /* ---------- shared ---------- */
+  .scene{position:relative}
+  .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;
+    display:flex;align-items:center;justify-content:center}
+  .tag{position:absolute;top:22px;left:26px;font-size:11px;letter-spacing:.22em;
+    text-transform:uppercase;opacity:.75;z-index:30}
+  .tag b{display:block;font-size:clamp(20px,3.4vmin,32px);letter-spacing:.02em;margin-top:4px;opacity:1}
+  .idx{position:absolute;top:22px;right:26px;font-size:11px;letter-spacing:.22em;opacity:.6;z-index:30}
+  .tile{position:absolute;border-radius:14px;overflow:hidden;display:flex;
+    align-items:center;justify-content:center;color:#fff;font-weight:800;
+    box-shadow:0 18px 40px rgba(10,15,30,.18);will-change:transform,opacity}
+  .tile .big{font-size:clamp(28px,6vmin,64px);line-height:.95;letter-spacing:-.01em;text-align:center;padding:8px}
+  .tile .sm{position:absolute;left:12px;bottom:10px;font-size:10px;letter-spacing:.18em;font-weight:600;opacity:.85}
+  .g-red{background:linear-gradient(140deg,#ff5a2a,var(--red) 55%,#b30f04)}
+  .g-blue{background:linear-gradient(150deg,#3f7bff,var(--blue) 60%,#0b2470)}
+  .g-sky{background:linear-gradient(150deg,#8fd8ff,var(--sky) 55%,#1c6fb8)}
+  .g-dark{background:linear-gradient(150deg,#3a4152,#0c0e14 70%)}
+  .g-green{background:linear-gradient(150deg,#2fe08f,var(--green) 60%,#0a6e42)}
+  .g-pink{background:linear-gradient(150deg,#ff8ac0,var(--pink) 60%,#a11254)}
+  .g-orange{background:linear-gradient(150deg,#ffb03a,var(--orange) 60%,#c25200)}
+  .g-violet{background:linear-gradient(150deg,#a678ff,var(--violet) 60%,#3d1494)}
+  .g-yellow{background:linear-gradient(150deg,#ffe066,var(--yellow) 60%,#d99a00);color:#191104}
+  .g-paper{background:linear-gradient(150deg,#ffffff,#dfe5ea);color:var(--ink)}
+
+  /* ---------- hero ---------- */
+  .hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:8vmin 6vmin;position:relative}
+  .hero .kicker{font-size:12px;letter-spacing:.3em;text-transform:uppercase;opacity:.65}
+  .hero h1{font-size:clamp(44px,10.5vmin,118px);line-height:.94;letter-spacing:-.02em;margin:2.4vmin 0}
+  .hero h1 em{font-style:normal;color:var(--red)}
+  .hero p{max-width:56ch;font-size:clamp(14px,1.9vmin,18px);line-height:1.55;opacity:.8}
+  .hero .names{display:flex;flex-wrap:wrap;gap:8px;margin-top:4vmin}
+  .hero .names span{border:1.5px solid var(--ink);border-radius:99px;padding:7px 14px;
+    font-size:12px;letter-spacing:.14em;font-weight:700}
+  .hero .scrollhint{position:absolute;bottom:26px;left:6vmin;font-size:11px;letter-spacing:.25em;opacity:.6}
+
+  /* ---------- 1 TUNNEL ---------- */
+  #tunnel .stage{perspective:950px;perspective-origin:50% 46%;background:
+    radial-gradient(120% 90% at 50% 40%,#f7f8f9 0%,#e4e8ec 55%,#ccd2d9 100%)}
+  #tunnel .vanish{position:absolute;left:50%;top:46%;width:10px;height:10px;margin:-5px;
+    border-radius:50%;background:#fff;box-shadow:0 0 60px 30px rgba(255,255,255,.9);z-index:1}
+  #tunnel .tile{width:29vmin;height:40vmin;top:50%;left:50%;z-index:2}
+  #tunnel .cap{position:absolute;bottom:9vh;left:0;right:0;text-align:center;z-index:5;
+    font-size:11px;letter-spacing:.3em;opacity:.55;text-transform:uppercase}
+
+  /* ---------- 2 ORBIT ---------- */
+  #orbit .stage{background:radial-gradient(90% 90% at 50% 45%,#f8f9fa,#e3e7ec)}
+  #orbit .tile{width:15vmin;height:19vmin;top:50%;left:50%}
+  #orbit .center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;z-index:5}
+  #orbit .center .cb{font-size:clamp(30px,6vmin,58px);font-weight:900;letter-spacing:-.01em;line-height:.95}
+  #orbit .center .cs{font-size:11px;letter-spacing:.28em;opacity:.6;margin-top:8px;text-transform:uppercase}
+
+  /* ---------- 3 SCATTER ---------- */
+  #scatter .wrap{position:relative;height:150vh}
+  #scatter .stage{height:100vh}
+  #scatter .blk{position:absolute;border-radius:14px;box-shadow:0 16px 36px rgba(10,15,30,.16);
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;will-change:transform}
+  #scatter .blk small{position:absolute;left:12px;bottom:10px;font-size:10px;letter-spacing:.18em;font-weight:600;opacity:.85}
+  #scatter .blk.g-paper{color:var(--ink)}
+
+  /* ---------- 4 FISHEYE ---------- */
+  #fisheye .stage{background:#e8ebee}
+  #fisheye .lens{position:relative;width:min(94vw,1200px);height:52vmin;
+    clip-path:url(#lensClip);background:#0c0e14;overflow:hidden}
+  #fisheye .track{position:absolute;top:0;left:0;height:100%;display:flex;gap:1.2vmin;will-change:transform}
+  #fisheye .panel{position:relative;height:100%;width:36vmin;flex:0 0 auto;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;overflow:hidden}
+  #fisheye .panel .big{font-size:clamp(30px,6.4vmin,66px)}
+  #fisheye .panel .sm{position:absolute;left:12px;bottom:10px;font-size:10px;letter-spacing:.18em;font-weight:600;opacity:.85}
+
+  /* ---------- 5 WAVY ---------- */
+  #wavy .stage{background:linear-gradient(180deg,#f4f6f8,#e2e7ec)}
+  #wavy svg.waves{position:absolute;inset:0;width:100%;height:100%}
+  #wavy .centerCard{position:relative;z-index:3;width:26vmin;height:38vmin;border-radius:16px;
+    box-shadow:0 24px 50px rgba(10,15,30,.25);display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:900;font-size:clamp(26px,5vmin,52px);text-align:center;line-height:1}
+
+  /* ---------- 6 CASCADE ---------- */
+  #cascade .stage{background:radial-gradient(100% 100% at 30% 20%,#f8f9fa,#e0e5ea)}
+  #cascade .card{position:absolute;width:24vmin;height:31vmin;border-radius:14px;overflow:hidden;
+    box-shadow:0 20px 44px rgba(10,15,30,.2);display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:900;will-change:transform}
+  #cascade .card .big{font-size:clamp(24px,5vmin,54px);text-align:center;line-height:1;padding:8px}
+  #cascade .card .sm{position:absolute;left:12px;bottom:10px;font-size:10px;letter-spacing:.18em;font-weight:600;opacity:.85}
+
+  /* ---------- footer ---------- */
+  footer{padding:9vmin 6vmin 12vmin;text-align:center}
+  footer .fb{font-size:clamp(30px,6vmin,64px);font-weight:900;letter-spacing:-.01em}
+  footer .fb em{font-style:normal;color:var(--red)}
+  footer p{opacity:.65;margin-top:12px;font-size:14px;line-height:1.6}
+  footer .wa{display:inline-block;margin-top:22px;background:#25d366;color:#06281a;font-weight:800;
+    padding:13px 26px;border-radius:99px;text-decoration:none;font-size:15px}
+
+  /* ---------- control bar (signature de l'original) ---------- */
+  #ctl{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:100;
+    background:rgba(13,15,19,.92);color:#fff;border-radius:99px;padding:9px 18px;
+    display:flex;align-items:center;gap:14px;font-size:11px;letter-spacing:.18em;
+    text-transform:uppercase;backdrop-filter:blur(6px);box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  #ctl .bar{width:110px;height:3px;background:rgba(255,255,255,.25);border-radius:2px;overflow:hidden}
+  #ctl .bar i{display:block;height:100%;width:0;background:var(--yellow)}
+  #ctlName{font-weight:800;min-width:86px;text-align:center}
+  @media (max-width:560px){ #ctl .bar{width:64px} #ctlName{min-width:64px} }
+</style>
+</head>
+<body>
+
+<!-- SVG clip pour la lentille Fisheye -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <clipPath id="lensClip" clipPathUnits="objectBoundingBox">
+      <path d="M0,0.16 Q0.5,0.34 1,0.16 L1,0.84 Q0.5,0.66 0,0.84 Z"/>
+    </clipPath>
+    <linearGradient id="wavyL" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#17b978"/><stop offset=".55" stop-color="#0a6e42"/><stop offset="1" stop-color="#08351f"/>
+    </linearGradient>
+    <linearGradient id="wavyR" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f43a1d"/><stop offset=".55" stop-color="#c22a12"/><stop offset="1" stop-color="#5c0d02"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<header class="hero">
+  <div class="kicker">VERTEX WEB — Motion Pack</div>
+  <h1>STOP DESIGNING<br><em>BORING</em> SECTIONS.</h1>
+  <p>Six sections animées au scroll, reconstruites à l'identique d'après la référence :
+  un tunnel 3D, une orbite, un collage en parallaxe, un ruban « fisheye », des panneaux
+  liquides et une cascade diagonale. Faites défiler — chaque section est pilotée par le scroll, en douceur.</p>
+  <div class="names"><span>01 TUNNEL</span><span>02 ORBIT</span><span>03 SCATTER</span><span>04 REEL FLUX</span><span>05 WAVY</span><span>06 CASCADE</span></div>
+  <div class="scrollhint">▼ SCROLL</div>
+</header>
+
+<!-- 1 · TUNNEL -->
+<section class="scene" id="tunnel" data-name="01 · Tunnel" style="height:320vh">
+  <div class="stage">
+    <div class="tag">Section<b>TUNNEL 3D</b></div><div class="idx">LIGHT / SPACE / FUTURE</div>
+    <div class="vanish"></div>
+    <div class="cap">Le scroll fait voler la caméra dans le couloir</div>
+  </div>
+</section>
+
+<!-- 2 · ORBIT -->
+<section class="scene" id="orbit" data-name="02 · Orbit" style="height:300vh">
+  <div class="stage">
+    <div class="tag">Section<b>ORBIT</b></div><div class="idx">16 WORKS · EDITION 01</div>
+    <div class="center"><div class="cb">VERTEX<br>MOTION</div><div class="cs">L'anneau tourne avec le scroll</div></div>
+  </div>
+</section>
+
+<!-- 3 · SCATTER -->
+<section class="scene" id="scatter" data-name="03 · Scatter">
+  <div class="wrap">
+    <div class="stage">
+      <div class="tag">Section<b>SCATTER</b></div><div class="idx">PARALLAX COLLAGE</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · FISHEYE / REEL FLUX -->
+<section class="scene" id="fisheye" data-name="04 · Reel Flux" style="height:300vh">
+  <div class="stage">
+    <div class="tag">Section<b>REEL FLUX</b></div><div class="idx">ARCHIVE — Nº 07</div>
+    <div class="lens"><div class="track" id="fluxTrack"></div></div>
+  </div>
+</section>
+
+<!-- 5 · WAVY -->
+<section class="scene" id="wavy" data-name="05 · Wavy" style="height:280vh">
+  <div class="stage">
+    <div class="tag">Section<b>WAVY PANELS</b></div><div class="idx">LIQUID EDGES</div>
+    <svg class="waves" preserveAspectRatio="none" viewBox="0 0 100 100">
+      <path id="waveL" fill="url(#wavyL)"></path>
+      <path id="waveR" fill="url(#wavyR)"></path>
+    </svg>
+    <div class="centerCard g-dark">FORM<br>&amp;<br>FLOW</div>
+  </div>
+</section>
+
+<!-- 6 · CASCADE -->
+<section class="scene" id="cascade" data-name="06 · Cascade" style="height:300vh">
+  <div class="stage">
+    <div class="tag">Section<b>CASCADE</b></div><div class="idx">NEON ARCHIVE Nº06</div>
+  </div>
+</section>
+
+<footer>
+  <div class="fb">VERTEX <em>WEB</em></div>
+  <p>Motion Pack — 6 sections prêtes à être appliquées à vos démos et sites clients.<br>
+  Chaque section est un module autonome (HTML/CSS/JS vanilla), piloté par le scroll, fluide sur mobile.</p>
+  <a class="wa" href="https://wa.me/212693981822">WhatsApp · 0693 981 822</a>
+</footer>
+
+<div id="ctl"><span id="ctlName">HERO</span><span class="bar"><i id="ctlFill"></i></span><span id="ctlPct">0%</span></div>
+
+<script>
+(function(){
+"use strict";
+const $=(s,c)=>(c||document).querySelector(s), $$=(s,c)=>Array.from((c||document).querySelectorAll(s));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const vh=()=>window.innerHeight;
+const GRADS=["g-red","g-blue","g-sky","g-dark","g-green","g-pink","g-orange","g-violet","g-yellow","g-paper"];
+function mkTile(parent,cls,big,sm){
+  const d=document.createElement("div"); d.className="tile "+cls;
+  d.innerHTML=(big?'<div class="big">'+big+'</div>':"")+(sm?'<div class="sm">'+sm+'</div>':"");
+  parent.appendChild(d); return d;
+}
+/* ---------- build tiles ---------- */
+/* TUNNEL : 6 par mur */
+const tStage=$("#tunnel .stage"), tunnelTiles=[];
+["R","Aa","03","FORM","ECHO","Nº 07"].forEach((t,i)=>{ tunnelTiles.push({el:mkTile(tStage,GRADS[i%10],t,"WALL L · 0"+(i+1)),side:-1,i}); });
+["VERTEX","S","X","FLOW","24","OK"].forEach((t,i)=>{ tunnelTiles.push({el:mkTile(tStage,GRADS[(i+4)%10],t,"WALL R · 0"+(i+1)),side:1,i}); });
+/* ORBIT : 14 */
+const oStage=$("#orbit .stage"), orbitTiles=[];
+["S","X","FO","RM","ECHO","Aa","03","R","◐","Nº","V","TX","24","GO"].forEach((t,i)=>{ orbitTiles.push(mkTile(oStage,GRADS[(i*3)%10],t,"0"+(i+1))); });
+/* SCATTER : blocs façon wireframe de l'original */
+const sStage=$("#scatter .stage");
+const scatterDefs=[
+ {x:14,y:20,w:15,h:20,g:"g-sky",t:"",sm:"IMAGE",sp:1.5,r:-5},
+ {x:30,y:14,w:20,h:24,g:"g-paper",t:"Title",sm:"TEXT",sp:.7,r:2},
+ {x:56,y:12,w:15,h:17,g:"g-orange",t:"",sm:"CARD",sp:1.9,r:6},
+ {x:12,y:52,w:17,h:22,g:"g-green",t:"Text",sm:"TEXT",sp:.9,r:3},
+ {x:36,y:46,w:24,h:28,g:"g-blue",t:"▶",sm:"MEDIA",sp:1.2,r:-2},
+ {x:66,y:44,w:14,h:24,g:"g-yellow",t:"",sm:"IMAGE",sp:1.7,r:5},
+ {x:20,y:82,w:15,h:16,g:"g-pink",t:"",sm:"CARD",sp:2.1,r:-6},
+ {x:44,y:82,w:18,h:17,g:"g-violet",t:"Text",sm:"TEXT",sp:.8,r:4},
+ {x:70,y:76,w:16,h:19,g:"g-red",t:"Aa",sm:"TYPE",sp:1.4,r:-3}];
+const scatterBlks=scatterDefs.map(d=>{
+  const el=document.createElement("div"); el.className="blk "+d.g;
+  el.style.cssText=`left:${d.x}%;top:${d.y}%;width:${d.w}vmin;height:${d.h}vmin;font-size:clamp(16px,3vmin,30px)`;
+  el.innerHTML=(d.t||"")+(d.sm?`<small>${d.sm}</small>`:"");
+  sStage.appendChild(el); return {el,d};
+});
+/* FLUX : 7 panneaux */
+const track=$("#fluxTrack"), fluxPanels=[];
+["◐","Aa","03","FORM","R","ECHO","Nº 07"].forEach((t,i)=>{
+  const d=document.createElement("div"); d.className="panel "+GRADS[(i*2+1)%10];
+  d.innerHTML=`<div class="big">${t}</div><div class="sm">PANEL 0${i+1}</div>`;
+  track.appendChild(d); fluxPanels.push(d);
+});
+/* CASCADE : 8 cartes */
+const cStage=$("#cascade .stage"), cascadeCards=[];
+["Nº 01","Aa","▶","FORM","◐","ECHO","S","24"].forEach((t,i)=>{
+  const d=document.createElement("div"); d.className="card "+GRADS[(i*3+2)%10];
+  d.style.left=(5+i*11.5)+"%"; d.style.top=(7+i*10.5)+"%"; d.style.zIndex=10+i;
+  d.innerHTML=`<div class="big">${t}</div><div class="sm">ARCHIVE 0${i+1}</div>`;
+  cStage.appendChild(d); cascadeCards.push(d);
+});
+/* ---------- progress par scène ---------- */
+const scenes=$$(".scene").map(el=>({el,name:el.dataset.name||"—",cur:0,tgt:0}));
+function sceneProgress(el){
+  const r=el.getBoundingClientRect(), total=el.offsetHeight-vh();
+  if(total<=0){ const rr=clamp((vh()-r.top)/(vh()+r.height),0,1); return rr; }
+  return clamp(-r.top/total,0,1);
+}
+/* ---------- rendus ---------- */
+function renderTunnel(p){
+  for(const t of tunnelTiles){
+    let z=-t.i*430 - (t.side>0?215:0) + p*2650;
+    const fadeIn=clamp((z+1850)/500,0,1), fadeOut=clamp((300-z)/240,0,1);
+    const op=Math.min(fadeIn,fadeOut);
+    t.el.style.opacity=op.toFixed(3);
+    t.el.style.transform=`translate(-50%,-50%) translate3d(${t.side*45}vmin,0,${z}px) rotateY(${t.side*-62}deg)`;
+  }
+}
+function renderOrbit(p,t){
+  const N=orbitTiles.length, rot=p*2.6 + t*0.03;
+  orbitTiles.forEach((el,i)=>{
+    const a=(i/N)*Math.PI*2 + rot;
+    const x=Math.cos(a)*37, y=Math.sin(a)*28, depth=(Math.sin(a)+1)/2;
+    const s=.42+depth*.8;
+    el.style.zIndex=String(Math.round(depth*30));
+    el.style.opacity=(0.3+depth*0.7).toFixed(3);
+    el.style.transform=`translate(-50%,-50%) translate(${x}vmin,${y}vmin) scale(${s.toFixed(3)}) rotate(${Math.cos(a)*5}deg)`;
+  });
+}
+function renderScatter(p){
+  for(const {el,d} of scatterBlks){
+    const dy=(0.5-p)*d.sp*190;
+    el.style.transform=`translate3d(0,${dy.toFixed(1)}px,0) rotate(${d.r}deg)`;
+  }
+}
+const lens=$("#fisheye .lens");
+function renderFlux(p){
+  const maxShift=Math.max(0, track.scrollWidth - lens.clientWidth);
+  track.style.transform=`translate3d(${(-p*maxShift).toFixed(1)}px,0,0)`;
+  const lr=lens.getBoundingClientRect(), cx=lr.left+lr.width/2;
+  fluxPanels.forEach(pn=>{
+    const r=pn.getBoundingClientRect(), c=r.left+r.width/2;
+    const d=clamp(1-Math.abs(c-cx)/(lr.width*0.62),0,1);
+    pn.style.transform=`scale(${(1+d*0.06).toFixed(3)})`;
+  });
+}
+const waveL=$("#waveL"), waveR=$("#waveR"), centerCard=$("#wavy .centerCard");
+function wavePath(leftSide,phase){
+  const pts=[]; const N=24;
+  for(let i=0;i<=N;i++){
+    const y=i*(100/N);
+    const w=Math.sin(y*0.11+phase)*3.4 + Math.sin(y*0.045-phase*0.7)*2.2;
+    const x=leftSide? 27+w : 73-w;
+    pts.push(`L${x.toFixed(2)},${y.toFixed(1)}`);
+  }
+  return leftSide? `M0,0 ${pts.join(" ")} L0,100 Z` : `M100,0 ${pts.join(" ")} L100,100 Z`;
+}
+function renderWavy(p,t){
+  const phase=p*5.5 + t*0.9;
+  waveL.setAttribute("d", wavePath(true,phase));
+  waveR.setAttribute("d", wavePath(false,phase+1.7));
+  centerCard.style.transform=`translateY(${Math.sin(t*1.3)*5}px) rotate(${Math.sin(t*0.7)*1.2}deg)`;
+}
+function renderCascade(p){
+  const gx=-p*36, gy=-p*27;
+  cascadeCards.forEach((el,i)=>{
+    const extra=(1-p)*i*4.5;
+    el.style.transform=`translate(${gx-extra}vmin,${gy-extra*0.75}vmin) rotate(${-7+p*5+i*0.5}deg)`;
+  });
+}
+const RENDER={"tunnel":renderTunnel,"orbit":renderOrbit,"scatter":renderScatter,
+  "fisheye":renderFlux,"wavy":renderWavy,"cascade":renderCascade};
+/* ---------- boucle ---------- */
+const ctlName=$("#ctlName"), ctlFill=$("#ctlFill"), ctlPct=$("#ctlPct");
+const reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let t0=performance.now();
+function frame(now){
+  const t=(now-t0)/1000;
+  let active=null;
+  for(const s of scenes){
+    s.tgt=sceneProgress(s.el);
+    s.cur+= (s.tgt-s.cur)*(reduce?1:0.085);
+    const fn=RENDER[s.el.id]; if(fn) fn(s.cur,t);
+    const r=s.el.getBoundingClientRect();
+    if(r.top<vh()*0.5 && r.bottom>vh()*0.5) active=s;
+  }
+  if(active){
+    ctlName.textContent=active.name.toUpperCase();
+    const pc=Math.round(active.cur*100);
+    ctlPct.textContent=pc+"%"; ctlFill.style.width=pc+"%";
+  } else { ctlName.textContent="VERTEX"; }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
